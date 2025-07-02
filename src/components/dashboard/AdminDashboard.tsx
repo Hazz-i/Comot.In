@@ -282,7 +282,7 @@ export function AdminDashboard({ token }: AdminDashboardProps) {
 
 					{recentUsers.length > 0 ? (
 						<div className='divide-y divide-gray-200'>
-							{recentUsers.map((user) => (
+							{recentUsers.map((user: any) => (
 								<div key={user.id} className='p-4 hover:bg-gray-50'>
 									<div className='flex items-center justify-between'>
 										<div className='flex items-center'>

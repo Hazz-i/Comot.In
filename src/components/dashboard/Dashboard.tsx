@@ -12,6 +12,7 @@ interface UserData {
 	username: string;
 	email: string;
 	downloads: number;
+	role?: string;
 }
 
 interface DownloadItem {
@@ -56,6 +57,12 @@ export function Dashboard({ token }: DashboardProps) {
 		// Get user data from token if possible
 		const tokenData = parseJwt(token);
 
+		// Check if user is admin and redirect to admin dashboard
+		if (tokenData && tokenData.sub === 'admin') {
+			navigate('/admin-dashboard');
+			return;
+		}
+
 		const fetchUserData = async () => {
 			setIsLoading(true);
 			try {
@@ -66,6 +73,7 @@ export function Dashboard({ token }: DashboardProps) {
 						username: tokenData.username,
 						email: tokenData.email,
 						downloads: parseInt(localStorage.getItem('downloadCount') || '0'),
+						role: tokenData.role || 'user',
 					});
 				} else {
 					// Fallback to API call if token doesn't contain user info
@@ -82,6 +90,7 @@ export function Dashboard({ token }: DashboardProps) {
 								email: data.email || 'user@example.com',
 								downloads:
 									data.total_downloads || parseInt(localStorage.getItem('downloadCount') || '0'),
+								role: data.role || 'user',
 							});
 						} else {
 							throw new Error('Failed to fetch user data');
@@ -93,6 +102,7 @@ export function Dashboard({ token }: DashboardProps) {
 							username: 'User',
 							email: 'user@example.com',
 							downloads: parseInt(localStorage.getItem('downloadCount') || '0'),
+							role: 'user',
 						});
 					}
 				}

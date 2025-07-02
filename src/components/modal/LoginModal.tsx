@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { API_BASE_URL, AUTH_TOKEN_KEY } from '@/constant';
 
@@ -21,9 +22,28 @@ export function LoginModal({
 	onClose: () => void;
 	setToken: (token: string) => void;
 }) {
+	const navigate = useNavigate();
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
 	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	// Function to decode JWT token
+	const parseJwt = (token: string) => {
+		try {
+			const base64Url = token.split('.')[1];
+			const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+			const jsonPayload = decodeURIComponent(
+				atob(base64)
+					.split('')
+					.map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+					.join('')
+			);
+			return JSON.parse(jsonPayload);
+		} catch (e) {
+			console.error('Error parsing JWT:', e);
+			return null;
+		}
+	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -70,7 +90,20 @@ export function LoginModal({
 			localStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
 			// Using setToken will trigger the App component to show Dashboard
 			setToken(data.access_token);
-			toast.success('Login successful! Redirecting to dashboard...');
+
+			// Check if user is admin and redirect accordingly
+			const tokenData = parseJwt(data.access_token);
+			if (tokenData && tokenData.sub === 'admin') {
+				toast.success('Login successful! Redirecting to admin dashboard...');
+				setTimeout(() => {
+					navigate('/admin-dashboard');
+				}, 1000);
+			} else {
+				toast.success('Login successful! Redirecting to dashboard...');
+				setTimeout(() => {
+					navigate('/dashboard');
+				}, 1000);
+			}
 
 			setUsername('');
 			setPassword('');
